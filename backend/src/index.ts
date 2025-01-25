@@ -199,7 +199,7 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
   try {
     const { title, link, tags, type } = req.body;
     const userId = req.userId;
-    const { body: html } = await got(link);
+    const { body: html } = await got(link, { timeout: 10000 });
 
     const metadata = await scraper({ html: html, url: link });
 
