@@ -26,7 +26,11 @@ app.use(express.json());
 const port = 3000;
 app.use(bodyparser.json());
 env.config();
-app.use(cors());
+app.use(cors({
+    origin: "https://link-hive-seven.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "token"],
+}));
 const saltRounds = 10;
 const redis = new Redis();
 const transporter = nodemailer.createTransport({

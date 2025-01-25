@@ -39,7 +39,7 @@ app.use(
 
 const saltRounds = 10;
 
-const redis = new Redis();
+const redis = new Redis(process.env.REDIS_URL!);
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
