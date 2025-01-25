@@ -29,7 +29,11 @@ app.use(bodyparser.json());
 
 env.config();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://link-hive-seven.vercel.app/",
+  }),
+);
 
 const saltRounds = 10;
 
