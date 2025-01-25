@@ -31,7 +31,7 @@ env.config();
 
 app.use(
   cors({
-    origin: "https://link-hive-seven.vercel.app/",
+    origin: "https://link-hive-seven.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "token"],
   }),
