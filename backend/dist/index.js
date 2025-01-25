@@ -18,12 +18,15 @@ import crypto from "crypto";
 import cors from "cors";
 import nodemailer from "nodemailer";
 import { Redis } from "ioredis";
-import ogs from "open-graph-scraper";
+import metascraper from "metascraper";
+import metascraperImage from "metascraper-image";
+import got from "got";
 import { userModel, contentModel, tagModel, typeModel, linkModel, } from "./db.js";
 import { Middleware } from "./middleware.js";
 const app = express();
 app.use(express.json());
 const port = 3000;
+const scraper = metascraper([metascraperImage()]);
 app.use(bodyparser.json());
 env.config();
 app.use(cors({
@@ -32,7 +35,7 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "token"],
 }));
 const saltRounds = 10;
-const redis = new Redis();
+const redis = new Redis(process.env.REDIS_URL);
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -161,22 +164,9 @@ app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, 
     try {
         const { title, link, tags, type } = req.body;
         const userId = req.userId;
-        const { result, error } = yield ogs({ url: link });
-        if (error) {
-            return res
-                .status(400)
-                .json({ message: "Error fetching Open Graph data" });
-        }
-        const imageUrl = result.ogImage &&
-            Array.isArray(result.ogImage) &&
-            result.ogImage.length > 0
-            ? result.ogImage[0].url
-            : null;
-        if (!imageUrl) {
-            return res
-                .status(400)
-                .json({ message: "No image found on the provided link" });
-        }
+        const { body: html } = yield got(link);
+        const metadata = yield scraper({ html: html, url: link });
+        const imageUrl = metadata.image;
         const tagId = yield Promise.all(tags.map((tagName) => __awaiter(void 0, void 0, void 0, function* () {
             let tag = yield tagModel.findOne({ tags: tagName });
             if (!tag) {

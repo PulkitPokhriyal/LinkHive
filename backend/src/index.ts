@@ -9,7 +9,9 @@ import crypto from "crypto";
 import cors from "cors";
 import nodemailer from "nodemailer";
 import { Redis } from "ioredis";
-import ogs from "open-graph-scraper";
+import metascraper from "metascraper";
+import metascraperImage from "metascraper-image";
+import got from "got";
 import {
   userModel,
   contentModel,
@@ -24,6 +26,8 @@ const app = express();
 app.use(express.json());
 
 const port: number = 3000;
+
+const scraper = metascraper([metascraperImage()]);
 
 app.use(bodyparser.json());
 
@@ -195,25 +199,11 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
   try {
     const { title, link, tags, type } = req.body;
     const userId = req.userId;
-    const { result, error } = await ogs({ url: link });
+    const { body: html } = await got(link);
 
-    if (error) {
-      return res
-        .status(400)
-        .json({ message: "Error fetching Open Graph data" });
-    }
-    const imageUrl =
-      result.ogImage &&
-      Array.isArray(result.ogImage) &&
-      result.ogImage.length > 0
-        ? result.ogImage[0].url
-        : null;
+    const metadata = await scraper({ html: html, url: link });
 
-    if (!imageUrl) {
-      return res
-        .status(400)
-        .json({ message: "No image found on the provided link" });
-    }
+    const imageUrl = metadata.image;
 
     const tagId = await Promise.all(
       tags.map(async (tagName: string) => {
