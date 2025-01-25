@@ -33,7 +33,7 @@ app.use(
   cors({
     origin: "https://link-hive-seven.vercel.app/",
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "token"],
   }),
 );
 
