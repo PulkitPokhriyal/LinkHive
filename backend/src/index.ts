@@ -38,6 +38,7 @@ app.use(
     origin: ["https://link-hive-seven.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "token"],
+    credentials: true,
   }),
 );
 
