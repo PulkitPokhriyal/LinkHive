@@ -30,7 +30,7 @@ const scraper = metascraper([metascraperImage()]);
 app.use(bodyparser.json());
 env.config();
 app.use(cors({
-    origin: "https://link-hive-seven.vercel.app",
+    origin: ["https://link-hive-seven.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "token"],
 }));

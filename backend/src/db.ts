@@ -14,7 +14,7 @@ const userSchema = new Schema({
 const contentSchema = new Schema({
   title: { type: String, required: true },
   link: { type: String, required: true },
-  imageUrl: { type: String, required: true },
+  imageUrl: String,
   type: { type: ObjectId, required: true, ref: "Type" },
   tags: [{ type: ObjectId, ref: "Tag" }],
   userId: { type: ObjectId, ref: "User", required: true },
