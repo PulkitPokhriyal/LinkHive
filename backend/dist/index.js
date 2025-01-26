@@ -33,6 +33,7 @@ app.use(cors({
     origin: ["https://link-hive-seven.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "token"],
+    credentials: true,
 }));
 const saltRounds = 10;
 const redis = new Redis(process.env.REDIS_URL);
@@ -164,7 +165,11 @@ app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, 
     try {
         const { title, link, tags, type } = req.body;
         const userId = req.userId;
-        const { body: html } = yield got(link);
+        const { body: html } = yield got(link).catch((err) => {
+            console.error("Error fetching URL", err);
+            throw new Error("Invalid link or timeout occurred");
+        });
+        console.log(html);
         const metadata = yield scraper({ html: html, url: link });
         const imageUrl = metadata.image;
         const tagId = yield Promise.all(tags.map((tagName) => __awaiter(void 0, void 0, void 0, function* () {

@@ -200,11 +200,15 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
   try {
     const { title, link, tags, type } = req.body;
     const userId = req.userId;
-    const { body: html } = await got(link).catch((err) => {
-      console.error("Error fetching URL", err);
-      throw new Error("Invalid link or timeout occurred");
+    const { body: html } = await got(link, {
+      headers: {
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
+      },
     });
-    console.log(html);
+
     const metadata = await scraper({ html: html, url: link });
 
     const imageUrl = metadata.image;
