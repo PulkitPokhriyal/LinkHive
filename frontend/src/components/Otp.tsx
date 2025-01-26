@@ -43,7 +43,7 @@ export const Otp: React.FC<OtpProps> = ({ email }) => {
       });
       const jwt = response.data.token;
       localStorage.setItem("token", jwt);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (e: unknown) {
       if (axios.isAxiosError(e)) {
         if (e.response) {

@@ -1,24 +1,26 @@
 import { ReactElement } from "react";
 
 interface ButtonProps {
-  variant: "primary" | "secondary";
+  variant: "primary" | "secondary" | "orange";
   size: "sm" | "md" | "lg";
   text: string;
   startIcon?: ReactElement;
   endIcon?: ReactElement;
   onClick?: () => void;
-  hover: "primary" | "secondary";
+  hover: "primary" | "secondary" | "danger";
   type?: "button" | "submit" | "reset";
 }
 
 const variantStyles = {
   primary: "bg-primary text-white",
   secondary: "bg-secondary text-text",
+  orange: "bg-red-300 text-white",
 };
 
 const hoverStyles = {
   primary: "hover:bg-primary ",
   secondary: "hover:bg-secondary",
+  danger: "hover:bg-red-700",
 };
 
 const sizeStyles = {
