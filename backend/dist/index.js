@@ -162,16 +162,38 @@ app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 }));
 app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const { title, link, tags, type } = req.body;
         const userId = req.userId;
-        const { body: html } = yield got(link).catch((err) => {
-            console.error("Error fetching URL", err);
-            throw new Error("Invalid link or timeout occurred");
-        });
-        console.log(html);
-        const metadata = yield scraper({ html: html, url: link });
-        const imageUrl = metadata.image;
+        // Check if the link is a YouTube URL
+        let iframeCode = "";
+        if (link.includes("youtube.com") || link.includes("youtu.be")) {
+            // Extract the video ID from the YouTube link
+            const videoId = ((_a = link.split("v=")[1]) === null || _a === void 0 ? void 0 : _a.split("&")[0]) || link.split("/").pop();
+            if (videoId) {
+                iframeCode = `<iframe width="288" height="192" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            }
+        }
+        // If it's not YouTube, use MetaScraper to get metadata
+        let imageUrl = "";
+        let metadata;
+        if (!iframeCode) {
+            try {
+                const { body: html } = yield got(link, {
+                    headers: {
+                        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
+                    },
+                });
+                metadata = yield scraper({ html: html, url: link });
+                imageUrl = metadata.image || "";
+            }
+            catch (error) {
+                console.error("MetaScraper error:", error);
+            }
+        }
+        // Create tags for the content
         const tagId = yield Promise.all(tags.map((tagName) => __awaiter(void 0, void 0, void 0, function* () {
             let tag = yield tagModel.findOne({ tags: tagName });
             if (!tag) {
@@ -179,6 +201,7 @@ app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, 
             }
             return tag._id;
         })));
+        // Get or create the content type ID
         const getTypeId = (typeName) => __awaiter(void 0, void 0, void 0, function* () {
             try {
                 let type = yield typeModel.findOne({ type: typeName });
@@ -196,7 +219,7 @@ app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, 
         const content = yield contentModel.create({
             title: title,
             link: link,
-            imageUrl: imageUrl,
+            imageUrl: imageUrl || iframeCode,
             type: typeId,
             tags: tagId,
             userId: userId,
@@ -206,7 +229,7 @@ app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, 
             .json({ message: "Content added successfully", content });
     }
     catch (e) {
-        console.error("Error adding link", e);
+        console.error("Error adding content", e);
         return res.status(500).json({ message: "Server error", e });
     }
 }));

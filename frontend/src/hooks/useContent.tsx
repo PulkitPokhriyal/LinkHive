@@ -1,24 +1,15 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { BACKEND_URL } from "../../config";
-
+import { useRecoilState } from "recoil";
+import { contentsAtom } from "../store/atoms/Content";
 interface TypeItem {
   type: string;
   _id: string;
 }
 
 export function useContent() {
-  const [contents, setContents] = useState<
-    Array<{
-      _id: string;
-      title: string;
-      link: string;
-      imageUrl: string;
-      type: string;
-      tags: Array<{ _id: string; tags: string }>;
-    }>
-  >([]);
-
+  const [contents, setContents] = useRecoilState(contentsAtom);
   const [types, setTypes] = useState<TypeItem[]>([]);
 
   const refresh = async () => {
@@ -34,18 +25,18 @@ export function useContent() {
     }
   };
 
-  const fetchcontentTypes = async () => {
-    try {
+  useEffect(() => {
+    const fetchcontentTypes = async () => {
       const response = await axios.get(BACKEND_URL + "/api/v1/types", {
         headers: {
           token: localStorage.getItem("token"),
         },
       });
       setTypes(response.data.types);
-    } catch (e) {
-      console.error("Error fetchcontentTypes:", e);
-    }
-  };
+    };
+
+    fetchcontentTypes();
+  }, []);
 
   const fetchContentsByType = async (typeId: string) => {
     try {
@@ -64,13 +55,5 @@ export function useContent() {
     }
   };
 
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  useEffect(() => {
-    fetchcontentTypes();
-  }, [types]);
-
-  return { contents, refresh, types, fetchcontentTypes, fetchContentsByType };
+  return { contents, refresh, types, fetchContentsByType };
 }

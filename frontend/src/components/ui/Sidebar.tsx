@@ -4,8 +4,8 @@ interface TypeItem {
 }
 
 interface Sidebarprops {
-  types: TypeItem[]; // List of types with id and name
-  onTypeClick: (typeId: string) => void; // Callback to fetch content by type
+  types: TypeItem[];
+  onTypeClick: (typeId: string) => void;
 }
 
 export const Sidebar = ({ types, onTypeClick }: Sidebarprops) => {

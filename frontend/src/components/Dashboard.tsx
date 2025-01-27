@@ -6,16 +6,18 @@ import { ShareIcon } from "../icons/ShareIcon";
 import { Logout } from "./Logout";
 import { Sidebar } from "./ui/Sidebar";
 import { CreateContentModal } from "./CreateContentModal";
+import { useRecoilValue } from "recoil";
+import { contentsAtom } from "../store/atoms/Content";
 import { useContent } from "../hooks/useContent";
 
 function Dashboard() {
-  const { refresh, contents, types, fetchContentsByType } = useContent();
+  const contents = useRecoilValue(contentsAtom);
+  const { refresh, types, fetchContentsByType } = useContent();
   const [modalOpen, setModalOpen] = useState(false);
-
   useEffect(() => {
+    console.log("Dashboard mounted");
     refresh();
-  }, [modalOpen]);
-
+  }, []);
   return (
     <>
       <Sidebar

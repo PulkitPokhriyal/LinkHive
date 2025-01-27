@@ -22,7 +22,7 @@ export const Card = (props: Cardprops) => {
           token: localStorage.getItem("token"),
         },
       });
-      refresh();
+      await refresh();
     } catch (e) {
       console.error("Error deleting content", e);
     }
@@ -37,13 +37,23 @@ export const Card = (props: Cardprops) => {
           <EditIcon size="md" />
         </div>
       </div>
-      <a
-        className="border rounded-xl overflow-hidden"
-        href={props.link}
-        target="_blank"
-      >
-        <img src={props.imageUrl} alt="Thumbnail" className="h-48 w-72" />
-      </a>
+      <div className="border rounded-xl overflow-hidden">
+        {props.imageUrl && props.imageUrl.startsWith("<iframe") ? (
+          <div
+            className="h-48 w-72"
+            dangerouslySetInnerHTML={{ __html: props.imageUrl }}
+          ></div>
+        ) : (
+          <a href={props.link} target="_blank">
+            {" "}
+            <img
+              src={props.imageUrl}
+              alt="Thumbnail"
+              className="h-48 w-72"
+            />{" "}
+          </a>
+        )}
+      </div>{" "}
       <div className="mb-2 flex flex-wrap gap-2">
         {props.tags.map((tag, index) => (
           <span

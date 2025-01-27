@@ -200,19 +200,41 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
   try {
     const { title, link, tags, type } = req.body;
     const userId = req.userId;
-    const { body: html } = await got(link, {
-      headers: {
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
-      },
-    });
 
-    const metadata = await scraper({ html: html, url: link });
+    // Check if the link is a YouTube URL
+    let iframeCode = "";
+    if (link.includes("youtube.com") || link.includes("youtu.be")) {
+      // Extract the video ID from the YouTube link
+      const videoId =
+        link.split("v=")[1]?.split("&")[0] || link.split("/").pop();
 
-    const imageUrl = metadata.image;
+      if (videoId) {
+        iframeCode = `<iframe width="288" height="192" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      }
+    }
 
+    // If it's not YouTube, use MetaScraper to get metadata
+    let imageUrl = "";
+    let metadata;
+    if (!iframeCode) {
+      try {
+        const { body: html } = await got(link, {
+          headers: {
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
+          },
+        });
+
+        metadata = await scraper({ html: html, url: link });
+        imageUrl = metadata.image || "";
+      } catch (error) {
+        console.error("MetaScraper error:", error);
+      }
+    }
+
+    // Create tags for the content
     const tagId = await Promise.all(
       tags.map(async (tagName: string) => {
         let tag = await tagModel.findOne({ tags: tagName });
@@ -222,6 +244,8 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
         return tag._id;
       }),
     );
+
+    // Get or create the content type ID
     const getTypeId = async (typeName: string) => {
       try {
         let type = await typeModel.findOne({ type: typeName });
@@ -239,16 +263,17 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
     const content = await contentModel.create({
       title: title,
       link: link,
-      imageUrl: imageUrl,
+      imageUrl: imageUrl || iframeCode,
       type: typeId,
       tags: tagId,
       userId: userId,
     });
+
     return res
       .status(201)
       .json({ message: "Content added successfully", content });
   } catch (e) {
-    console.error("Error adding link", e);
+    console.error("Error adding content", e);
     return res.status(500).json({ message: "Server error", e });
   }
 });

@@ -4,13 +4,14 @@ import { BACKEND_URL } from "../../config";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { CrossIcon } from "../icons/CrossIcon";
-
+import { useContent } from "../hooks/useContent";
 interface CreateContentModalprops {
   open: boolean;
   onClose: () => void;
 }
 
 export function CreateContentModal({ open, onClose }: CreateContentModalprops) {
+  const { refresh } = useContent();
   const titleRef = useRef<HTMLInputElement | null>(null);
   const linkRef = useRef<HTMLInputElement | null>(null);
   const typeRef = useRef<HTMLInputElement | null>(null);
@@ -42,6 +43,7 @@ export function CreateContentModal({ open, onClose }: CreateContentModalprops) {
           },
         },
       );
+      await refresh();
       onClose();
     } catch (e: unknown) {
       if (axios.isAxiosError(e)) {
