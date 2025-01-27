@@ -36,7 +36,7 @@ export function useContent() {
     };
 
     fetchcontentTypes();
-  }, []);
+  }, [types]);
 
   const fetchContentsByType = async (typeId: string) => {
     try {
