@@ -175,7 +175,6 @@ app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, 
                 iframeCode = `<iframe width="288" height="192" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
             }
         }
-        // If it's not YouTube, use MetaScraper to get metadata
         let imageUrl = "";
         let metadata;
         if (!iframeCode) {
@@ -193,7 +192,6 @@ app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, 
                 console.error("MetaScraper error:", error);
             }
         }
-        // Create tags for the content
         const tagId = yield Promise.all(tags.map((tagName) => __awaiter(void 0, void 0, void 0, function* () {
             let tag = yield tagModel.findOne({ tags: tagName });
             if (!tag) {
@@ -201,7 +199,6 @@ app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, 
             }
             return tag._id;
         })));
-        // Get or create the content type ID
         const getTypeId = (typeName) => __awaiter(void 0, void 0, void 0, function* () {
             try {
                 let type = yield typeModel.findOne({ type: typeName });
@@ -311,7 +308,9 @@ app.get("/api/v1/types/:typeid", Middleware, (req, res) => __awaiter(void 0, voi
     try {
         const typeId = req.params.typeid;
         const userId = req.userId;
-        const contents = yield contentModel.find({ userId, type: typeId });
+        const contents = yield contentModel
+            .find({ userId, type: typeId })
+            .populate("tags");
         return res.status(200).json({ contents });
     }
     catch (e) {

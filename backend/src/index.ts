@@ -213,7 +213,6 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
       }
     }
 
-    // If it's not YouTube, use MetaScraper to get metadata
     let imageUrl = "";
     let metadata;
     if (!iframeCode) {
@@ -234,7 +233,6 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
       }
     }
 
-    // Create tags for the content
     const tagId = await Promise.all(
       tags.map(async (tagName: string) => {
         let tag = await tagModel.findOne({ tags: tagName });
@@ -245,7 +243,6 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
       }),
     );
 
-    // Get or create the content type ID
     const getTypeId = async (typeName: string) => {
       try {
         let type = await typeModel.findOne({ type: typeName });
@@ -362,7 +359,9 @@ app.get("/api/v1/types/:typeid", Middleware, async (req, res): Promise<any> => {
   try {
     const typeId = req.params.typeid;
     const userId = req.userId;
-    const contents = await contentModel.find({ userId, type: typeId });
+    const contents = await contentModel
+      .find({ userId, type: typeId })
+      .populate("tags");
     return res.status(200).json({ contents });
   } catch (e) {
     console.error("Error accessing contents", e);
