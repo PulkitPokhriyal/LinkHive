@@ -49,6 +49,7 @@ export function useContent() {
           },
         },
       );
+      console.log(response.data.contents);
       setContents(response.data.contents);
     } catch (e) {
       console.error("Error fetching content by type:", e);
