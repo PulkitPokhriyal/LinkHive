@@ -1,61 +1,107 @@
-import { useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { BACKEND_URL } from "../../config";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { CrossIcon } from "../icons/CrossIcon";
 import { useContent } from "../hooks/useContent";
+import { contentAtomById } from "../store/atoms/Content";
+import { useRecoilValue } from "recoil";
+
 interface CreateContentModalprops {
   open: boolean;
   onClose: () => void;
+  type: "Add Content" | "Update Content";
 }
 
-export function CreateContentModal({ open, onClose }: CreateContentModalprops) {
+export function CreateContentModal({
+  open,
+  onClose,
+  type,
+}: CreateContentModalprops) {
   const { refresh } = useContent();
-  const titleRef = useRef<HTMLInputElement | null>(null);
-  const linkRef = useRef<HTMLInputElement | null>(null);
-  const typeRef = useRef<HTMLInputElement | null>(null);
-  const tagsRef = useRef<HTMLInputElement | null>(null);
+  const contentById = useRecoilValue(contentAtomById);
+
+  const [title, setTitle] = useState("");
+  const [link, setLink] = useState("");
+  const [contentType, setContentType] = useState("");
+  const [tags, setTags] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      if (type === "Update Content" && contentById) {
+        setTitle(contentById.title || "");
+        setLink(contentById.link || "");
+        setContentType(contentById.type?.type || "");
+        setTags(contentById.tags?.map((tag) => tag.tags).join(", ") || "");
+      } else if (type === "Add Content") {
+        setTitle("");
+        setLink("");
+        setContentType("");
+        setTags("");
+      }
+    }
+  }, [open, type, contentById]);
 
   async function addContent(e: React.FormEvent) {
     e.preventDefault();
-    const title = titleRef.current?.value;
-    const link = linkRef.current?.value;
-    const type = typeRef.current?.value;
-    const tagString = tagsRef.current?.value || "";
-
-    const tags = tagString
+    const tagArray = tags
       .split(",")
       .map((tag) => tag.trim())
       .filter(Boolean);
-    try {
-      await axios.post(
-        BACKEND_URL + "/api/v1/content",
-        {
-          title,
-          link,
-          type,
-          tags,
-        },
-        {
-          headers: {
-            token: localStorage.getItem("token"),
+    if (type === "Add Content") {
+      try {
+        await axios.post(
+          BACKEND_URL + "/api/v1/content/",
+          {
+            title,
+            link,
+            type: contentType,
+            tags: tagArray,
           },
-        },
-      );
-      await refresh();
-      onClose();
-    } catch (e: unknown) {
-      if (axios.isAxiosError(e)) {
-        alert(e);
+          {
+            headers: {
+              token: localStorage.getItem("token"),
+            },
+          },
+        );
+        await refresh();
+        onClose();
+      } catch (e: unknown) {
+        if (axios.isAxiosError(e)) {
+          alert(e);
+        }
+      }
+    } else {
+      try {
+        await axios.put(
+          BACKEND_URL + `/api/v1/updatecontent/${contentById._id}`,
+          {
+            title,
+            link,
+            type: contentType,
+            tags: tagArray,
+          },
+          {
+            headers: {
+              token: localStorage.getItem("token"),
+            },
+          },
+        );
+        await refresh();
+        onClose();
+      } catch (e: unknown) {
+        if (axios.isAxiosError(e)) {
+          alert(e);
+        }
       }
     }
   }
 
   return (
     <div>
-      {open && (
-        <div className="w-screen h-screen fixed  top-0 flex justify-center items-center">
+      {open && (type === "Add Content" || contentById) && (
+        <div className="w-screen h-screen fixed z-50 flex justify-center inset-0 items-center">
           <div className="bg-accent opacity-100 border rounded-md py-3 px-2">
             <div className="place-items-end hover:cursor-pointer">
               <CrossIcon size="lg" onClick={onClose} />
@@ -65,18 +111,36 @@ export function CreateContentModal({ open, onClose }: CreateContentModalprops) {
                 className="flex flex-col items-center pb-4"
                 onSubmit={addContent}
               >
-                <Input reference={titleRef} placeholder="Title" required />
-                <Input reference={linkRef} placeholder="Link" required />
-                <Input reference={typeRef} placeholder="Type" required />
                 <Input
-                  reference={tagsRef}
-                  placeholder="Tags(comma-seperated)"
+                  placeholder="Title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+                <Input
+                  placeholder="Link"
+                  value={link}
+                  onChange={(e) => setLink(e.target.value)}
+                  required
+                />
+                <Input
+                  placeholder="Type"
+                  value={contentType}
+                  onChange={(e) => setContentType(e.target.value)}
+                  required
+                />
+                <Input
+                  placeholder="Tags(comma-separated)"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
                   required
                 />
                 <Button
                   variant="primary"
                   size="md"
-                  text="Add Content"
+                  text={
+                    type === "Add Content" ? "Add Content" : "Update Content"
+                  }
                   hover="secondary"
                   type="submit"
                 />

@@ -9,26 +9,25 @@ import crypto from "crypto";
 import cors from "cors";
 import nodemailer from "nodemailer";
 import { Redis } from "ioredis";
-import metascraper from "metascraper";
-import metascraperImage from "metascraper-image";
-import got from "got";
 import {
   userModel,
   contentModel,
-  tagModel,
   typeModel,
   linkModel,
+  IType,
+  ITag,
 } from "./db.ts";
 import { Middleware } from "./middleware.ts";
-
+import {
+  getCreateTags,
+  getCreateType,
+  extractImageIframe,
+} from "./utils/contentutils.ts";
 const app = express();
 
 app.use(express.json());
 
 const port: number = 3000;
-
-const scraper = metascraper([metascraperImage()]);
-
 app.use(bodyparser.json());
 
 env.config();
@@ -201,66 +200,13 @@ app.post("/api/v1/content", Middleware, async (req, res): Promise<any> => {
     const { title, link, tags, type } = req.body;
     const userId = req.userId;
 
-    // Check if the link is a YouTube URL
-    let iframeCode = "";
-    if (link.includes("youtube.com") || link.includes("youtu.be")) {
-      // Extract the video ID from the YouTube link
-      const videoId =
-        link.split("v=")[1]?.split("&")[0] || link.split("/").pop();
-
-      if (videoId) {
-        iframeCode = `<iframe width="288" height="192" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-      }
-    }
-
-    let imageUrl = "";
-    let metadata;
-    if (!iframeCode) {
-      try {
-        const { body: html } = await got(link, {
-          headers: {
-            Accept:
-              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
-          },
-        });
-
-        metadata = await scraper({ html: html, url: link });
-        imageUrl = metadata.image || "";
-      } catch (error) {
-        console.error("MetaScraper error:", error);
-      }
-    }
-
-    const tagId = await Promise.all(
-      tags.map(async (tagName: string) => {
-        let tag = await tagModel.findOne({ tags: tagName });
-        if (!tag) {
-          tag = await tagModel.create({ tags: tagName });
-        }
-        return tag._id;
-      }),
-    );
-
-    const getTypeId = async (typeName: string) => {
-      try {
-        let type = await typeModel.findOne({ type: typeName });
-        if (!type) {
-          type = await typeModel.create({ type: typeName });
-        }
-        return type._id;
-      } catch (e) {
-        console.error("Error getting type ID", e);
-        throw e;
-      }
-    };
-    const typeId = await getTypeId(type);
-
+    const tagId = await getCreateTags(tags);
+    const typeId = await getCreateType(type);
+    const imageUrl = await extractImageIframe(link);
     const content = await contentModel.create({
       title: title,
       link: link,
-      imageUrl: imageUrl || iframeCode,
+      imageUrl: imageUrl,
       type: typeId,
       tags: tagId,
       userId: userId,
@@ -305,6 +251,26 @@ app.delete(
     }
   },
 );
+
+app.get("/api/v1/content/:id", Middleware, async (req, res): Promise<any> => {
+  try {
+    const userId = req.userId;
+    const id = req.params.id;
+    const contentById = await contentModel
+      .findOne({ userId, _id: id })
+      .populate("type tags");
+    if (!contentById) {
+      return res.status(404).json({ message: "Content Data not found" });
+    } else {
+      return res
+        .status(201)
+        .json({ message: "Content Data found", contentById });
+    }
+  } catch (e) {
+    console.error("Error getting content data", e);
+    return res.status(500).json({ messgae: "Server Error" });
+  }
+});
 
 app.get("/api/v1/content/share", Middleware, async (req, res): Promise<any> => {
   try {
@@ -368,6 +334,63 @@ app.get("/api/v1/types/:typeid", Middleware, async (req, res): Promise<any> => {
     return res.status(500).json({ message: "Server error" });
   }
 });
+
+app.put(
+  "/api/v1/updatecontent/:id",
+  Middleware,
+  async (req, res): Promise<any> => {
+    try {
+      const id = req.params.id;
+      const userId = req.userId;
+      const { title, link, type, tags } = req.body;
+      const existingContent = await contentModel
+        .findOne({ userId, _id: id })
+        .populate("type tags");
+      if (!existingContent) {
+        return res.status(404).json({ error: "Content not found" });
+      }
+      let updated = false;
+
+      if (title && title !== existingContent.title) {
+        existingContent.title = title;
+        updated = true;
+      }
+      if (link && link !== existingContent.link) {
+        existingContent.link = link;
+        existingContent.imageUrl = await extractImageIframe(link);
+        updated = true;
+      }
+
+      if (type && (existingContent.type as IType).type !== type) {
+        existingContent.type = await getCreateType(type);
+        updated = true;
+      }
+
+      if (
+        tags &&
+        JSON.stringify(
+          (existingContent.tags as ITag[]).map((t) => t.tags).sort(),
+        ) !== JSON.stringify(tags.sort())
+      ) {
+        existingContent.tags = await getCreateTags(tags);
+        updated = true;
+      }
+      if (updated) {
+        await existingContent.save();
+        return res.status(200).json({
+          message: "Content updated successfully",
+        });
+      } else {
+        return res.status(200).json({
+          message: "No changes detected",
+        });
+      }
+    } catch (e) {
+      console.error("Error updating content", e);
+      return res.status(500).json({ message: "Server error" });
+    }
+  },
+);
 
 async function main() {
   const mongoUri = process.env.MONGODB_STRING!;

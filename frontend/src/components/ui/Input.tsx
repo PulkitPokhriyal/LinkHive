@@ -4,7 +4,7 @@ interface Inputprops extends React.InputHTMLAttributes<HTMLInputElement> {
   placeholder: string;
   reference?: React.Ref<HTMLInputElement>;
   name?: string;
-  value?: string;
+  value?: string | string[];
   type?: string;
   required?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;

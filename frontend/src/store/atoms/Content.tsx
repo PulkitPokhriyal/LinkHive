@@ -13,3 +13,22 @@ export const contentsAtom = atom<
   key: "contentsAtom",
   default: [],
 });
+
+export const contentAtomById = atom<{
+  _id: string;
+  title: string;
+  link: string;
+  imageUrl: string;
+  type: { _id: string; type: string };
+  tags: Array<{ _id: string; tags: string }>;
+}>({
+  key: "contentAtomById",
+  default: {
+    _id: "",
+    title: "",
+    link: "",
+    imageUrl: "",
+    type: { _id: "", type: "" },
+    tags: [],
+  },
+});

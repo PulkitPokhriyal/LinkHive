@@ -18,15 +18,12 @@ import crypto from "crypto";
 import cors from "cors";
 import nodemailer from "nodemailer";
 import { Redis } from "ioredis";
-import metascraper from "metascraper";
-import metascraperImage from "metascraper-image";
-import got from "got";
-import { userModel, contentModel, tagModel, typeModel, linkModel, } from "./db.js";
+import { userModel, contentModel, typeModel, linkModel, } from "./db.js";
 import { Middleware } from "./middleware.js";
+import { getCreateTags, getCreateType, extractImageIframe, } from "./utils/contentutils.js";
 const app = express();
 app.use(express.json());
 const port = 3000;
-const scraper = metascraper([metascraperImage()]);
 app.use(bodyparser.json());
 env.config();
 app.use(cors({
@@ -162,61 +159,16 @@ app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 }));
 app.post("/api/v1/content", Middleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
         const { title, link, tags, type } = req.body;
         const userId = req.userId;
-        // Check if the link is a YouTube URL
-        let iframeCode = "";
-        if (link.includes("youtube.com") || link.includes("youtu.be")) {
-            // Extract the video ID from the YouTube link
-            const videoId = ((_a = link.split("v=")[1]) === null || _a === void 0 ? void 0 : _a.split("&")[0]) || link.split("/").pop();
-            if (videoId) {
-                iframeCode = `<iframe width="288" height="192" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-            }
-        }
-        let imageUrl = "";
-        let metadata;
-        if (!iframeCode) {
-            try {
-                const { body: html } = yield got(link, {
-                    headers: {
-                        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
-                    },
-                });
-                metadata = yield scraper({ html: html, url: link });
-                imageUrl = metadata.image || "";
-            }
-            catch (error) {
-                console.error("MetaScraper error:", error);
-            }
-        }
-        const tagId = yield Promise.all(tags.map((tagName) => __awaiter(void 0, void 0, void 0, function* () {
-            let tag = yield tagModel.findOne({ tags: tagName });
-            if (!tag) {
-                tag = yield tagModel.create({ tags: tagName });
-            }
-            return tag._id;
-        })));
-        const getTypeId = (typeName) => __awaiter(void 0, void 0, void 0, function* () {
-            try {
-                let type = yield typeModel.findOne({ type: typeName });
-                if (!type) {
-                    type = yield typeModel.create({ type: typeName });
-                }
-                return type._id;
-            }
-            catch (e) {
-                console.error("Error getting type ID", e);
-                throw e;
-            }
-        });
-        const typeId = yield getTypeId(type);
+        const tagId = yield getCreateTags(tags);
+        const typeId = yield getCreateType(type);
+        const imageUrl = yield extractImageIframe(link);
         const content = yield contentModel.create({
             title: title,
             link: link,
-            imageUrl: imageUrl || iframeCode,
+            imageUrl: imageUrl,
             type: typeId,
             tags: tagId,
             userId: userId,
@@ -255,6 +207,27 @@ app.delete("/api/v1/content/:id", Middleware, (req, res) => __awaiter(void 0, vo
     catch (e) {
         console.error("Error deleting content", e);
         return res.status(500).json({ message: "Server error" });
+    }
+}));
+app.get("/api/v1/content/:id", Middleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.userId;
+        const id = req.params.id;
+        const contentById = yield contentModel
+            .findOne({ userId, _id: id })
+            .populate("type tags");
+        if (!contentById) {
+            return res.status(404).json({ message: "Content Data not found" });
+        }
+        else {
+            return res
+                .status(201)
+                .json({ message: "Content Data found", contentById });
+        }
+    }
+    catch (e) {
+        console.error("Error getting content data", e);
+        return res.status(500).json({ messgae: "Server Error" });
     }
 }));
 app.get("/api/v1/content/share", Middleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -315,6 +288,53 @@ app.get("/api/v1/types/:typeid", Middleware, (req, res) => __awaiter(void 0, voi
     }
     catch (e) {
         console.error("Error accessing contents", e);
+        return res.status(500).json({ message: "Server error" });
+    }
+}));
+app.put("/api/v1/updatecontent/:id", Middleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = req.params.id;
+        const userId = req.userId;
+        const { title, link, type, tags } = req.body;
+        const existingContent = yield contentModel
+            .findOne({ userId, _id: id })
+            .populate("type tags");
+        if (!existingContent) {
+            return res.status(404).json({ error: "Content not found" });
+        }
+        let updated = false;
+        if (title && title !== existingContent.title) {
+            existingContent.title = title;
+            updated = true;
+        }
+        if (link && link !== existingContent.link) {
+            existingContent.link = link;
+            existingContent.imageUrl = yield extractImageIframe(link);
+            updated = true;
+        }
+        if (type && existingContent.type.type !== type) {
+            existingContent.type = yield getCreateType(type);
+            updated = true;
+        }
+        if (tags &&
+            JSON.stringify(existingContent.tags.map((t) => t.tags).sort()) !== JSON.stringify(tags.sort())) {
+            existingContent.tags = yield getCreateTags(tags);
+            updated = true;
+        }
+        if (updated) {
+            yield existingContent.save();
+            return res.status(200).json({
+                message: "Content updated successfully",
+            });
+        }
+        else {
+            return res.status(200).json({
+                message: "No changes detected",
+            });
+        }
+    }
+    catch (e) {
+        console.error("Error updating content", e);
         return res.status(500).json({ message: "Server error" });
     }
 }));

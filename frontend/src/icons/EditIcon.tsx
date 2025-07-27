@@ -9,6 +9,7 @@ export const EditIcon = (props: Iconprops) => {
       strokeWidth="1.5"
       stroke="currentColor"
       className={`${iconSizeVariants[props.size]} cursor-pointer`}
+      onClick={props.onClick}
     >
       <path
         strokeLinecap="round"

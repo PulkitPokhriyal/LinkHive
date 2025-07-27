@@ -2,7 +2,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { BACKEND_URL } from "../../config";
 import { useRecoilState } from "recoil";
-import { contentsAtom } from "../store/atoms/Content";
+import { contentsAtom, contentAtomById } from "../store/atoms/Content";
 interface TypeItem {
   type: string;
   _id: string;
@@ -11,6 +11,7 @@ interface TypeItem {
 export function useContent() {
   const [contents, setContents] = useRecoilState(contentsAtom);
   const [types, setTypes] = useState<TypeItem[]>([]);
+  const [contentById, setContentById] = useRecoilState(contentAtomById);
 
   const refresh = async () => {
     try {
@@ -55,6 +56,27 @@ export function useContent() {
       console.error("Error fetching content by type:", e);
     }
   };
+  const fetchContentById = async (contentId: string) => {
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/api/v1/content/${contentId}`,
+        {
+          headers: {
+            token: localStorage.getItem("token"),
+          },
+        },
+      );
+      setContentById(response.data.contentById);
+    } catch (e) {
+      console.error("Error fetching content by id:", e);
+    }
+  };
 
-  return { contents, refresh, types, fetchContentsByType };
+  return {
+    contents,
+    refresh,
+    types,
+    fetchContentsByType,
+    fetchContentById,
+  };
 }

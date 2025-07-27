@@ -1,10 +1,27 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 import env from "dotenv";
 
 env.config();
 const ObjectId = mongoose.Types.ObjectId;
 mongoose.connect(process.env.MONGODB_STRING!);
 
+export interface IType {
+  _id: Types.ObjectId;
+  type: string;
+}
+
+export interface ITag {
+  _id: Types.ObjectId;
+  tags: string;
+}
+interface IContent extends Document {
+  title: string;
+  link: string;
+  imageUrl?: string;
+  type: Types.ObjectId | IType;
+  tags: (Types.ObjectId | ITag)[];
+  userId: Types.ObjectId;
+}
 const userSchema = new Schema({
   email: { type: String, unique: true },
   hashpassword: String,
@@ -34,7 +51,7 @@ const linkSchema = new Schema({
 });
 
 const userModel = mongoose.model("User", userSchema);
-const contentModel = mongoose.model("Content", contentSchema);
+const contentModel = mongoose.model<IContent>("Content", contentSchema);
 const tagModel = mongoose.model("Tag", tagSchema);
 const typeModel = mongoose.model("Type", typeSchema);
 const linkModel = mongoose.model("Link", linkSchema);

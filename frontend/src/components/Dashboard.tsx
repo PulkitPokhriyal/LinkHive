@@ -30,6 +30,7 @@ function Dashboard() {
       <div>
         <CreateContentModal
           open={modalOpen}
+          type="Add Content"
           onClose={() => {
             setModalOpen(false);
           }}
