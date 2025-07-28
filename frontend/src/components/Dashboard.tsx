@@ -12,12 +12,23 @@ import { useContent } from "../hooks/useContent";
 
 function Dashboard() {
   const contents = useRecoilValue(contentsAtom);
-  const { refresh, types, fetchContentsByType } = useContent();
+  const { refresh, types, fetchContentsByType, generateShareLink } =
+    useContent();
   const [modalOpen, setModalOpen] = useState(false);
   useEffect(() => {
     console.log("Dashboard mounted");
     refresh();
   }, []);
+  const handleCopy = async () => {
+    try {
+      const hash = await generateShareLink();
+      const shareUrl = `${window.location.origin}/sharecontent/${hash}`;
+      await navigator.clipboard.writeText(shareUrl);
+      console.log(hash);
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+  };
   return (
     <>
       <Sidebar
@@ -51,7 +62,9 @@ function Dashboard() {
           text="Share Brain"
           hover="secondary"
           startIcon={<ShareIcon size="md" />}
-          onClick={() => alert("shared!")}
+          onClick={() => {
+            handleCopy();
+          }}
         />
 
         <Logout />

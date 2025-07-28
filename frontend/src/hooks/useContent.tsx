@@ -1,8 +1,12 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { BACKEND_URL } from "../../config";
-import { useRecoilState } from "recoil";
-import { contentsAtom, contentAtomById } from "../store/atoms/Content";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import {
+  contentsAtom,
+  contentAtomById,
+  sharelinkAtom,
+} from "../store/atoms/Content";
 interface TypeItem {
   type: string;
   _id: string;
@@ -12,7 +16,7 @@ export function useContent() {
   const [contents, setContents] = useRecoilState(contentsAtom);
   const [types, setTypes] = useState<TypeItem[]>([]);
   const [contentById, setContentById] = useRecoilState(contentAtomById);
-
+  const setShareableLink = useSetRecoilState(sharelinkAtom);
   const refresh = async () => {
     try {
       const response = await axios.get(BACKEND_URL + "/api/v1/content", {
@@ -72,11 +76,26 @@ export function useContent() {
     }
   };
 
+  const generateShareLink = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/v1/share-link`, {
+        headers: {
+          token: localStorage.getItem("token"),
+        },
+      });
+      setShareableLink(response.data.shareableLink);
+      return response.data.shareableLink;
+    } catch (e) {
+      console.error("Error generating link", e);
+    }
+  };
+
   return {
     contents,
     refresh,
     types,
     fetchContentsByType,
     fetchContentById,
+    generateShareLink,
   };
 }

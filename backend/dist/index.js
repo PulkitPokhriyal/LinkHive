@@ -230,19 +230,19 @@ app.get("/api/v1/content/:id", Middleware, (req, res) => __awaiter(void 0, void 
         return res.status(500).json({ messgae: "Server Error" });
     }
 }));
-app.get("/api/v1/content/share", Middleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.get("/api/v1/share-link", Middleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req.userId;
         const existingLink = yield linkModel.findOne({ userId });
         if (existingLink) {
-            const shareableLink = `${req.protocol}://${req.get("host")}/api/v1/content/${existingLink.hash}`;
+            const shareableLink = existingLink.hash;
             return res
                 .status(201)
                 .json({ message: "Link already exist", shareableLink });
         }
         const hash = crypto.randomBytes(16).toString("hex");
         yield linkModel.create({ hash, userId });
-        const shareableLink = `${req.protocol}://${req.get("host")}/api/v1/content/${hash}`;
+        const shareableLink = hash;
         return res
             .status(201)
             .json({ message: "Link created successfully", shareableLink });
@@ -252,12 +252,12 @@ app.get("/api/v1/content/share", Middleware, (req, res) => __awaiter(void 0, voi
         return res.status(500).json({ message: "Server error" });
     }
 }));
-app.get("/api/v1/content/:hash", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.get("/api/v1/shareablecontent/:hash", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const hash = req.params.hash;
         const link = yield linkModel.findOne({ hash });
         const userId = link === null || link === void 0 ? void 0 : link.userId;
-        const contents = yield contentModel.find({ userId });
+        const contents = yield contentModel.find({ userId }).populate("tags");
         return res.status(200).json({ contents });
     }
     catch (e) {

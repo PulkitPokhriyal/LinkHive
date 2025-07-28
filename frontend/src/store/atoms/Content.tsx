@@ -32,3 +32,12 @@ export const contentAtomById = atom<{
     tags: [],
   },
 });
+
+export const sharelinkAtom = atom<{
+  hash: string;
+}>({
+  key: "sharelinkAtom",
+  default: {
+    hash: "",
+  },
+});

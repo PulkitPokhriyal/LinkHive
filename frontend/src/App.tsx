@@ -3,6 +3,7 @@ import Dashboard from "./components/Dashboard";
 import { Signup } from "./components/Signup";
 import { Signin } from "./components/Signin";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import ShareableContent from "./components/ShareLink";
 import {
   BrowserRouter as Router,
   Routes,
@@ -37,6 +38,10 @@ function App() {
                   <Dashboard />{" "}
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/sharecontent/:sharelink"
+              element={<ShareableContent />}
             />
           </Routes>
         </>

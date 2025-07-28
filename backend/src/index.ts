@@ -272,13 +272,13 @@ app.get("/api/v1/content/:id", Middleware, async (req, res): Promise<any> => {
   }
 });
 
-app.get("/api/v1/content/share", Middleware, async (req, res): Promise<any> => {
+app.get("/api/v1/share-link", Middleware, async (req, res): Promise<any> => {
   try {
     const userId = req.userId;
     const existingLink = await linkModel.findOne({ userId });
 
     if (existingLink) {
-      const shareableLink = `${req.protocol}://${req.get("host")}/api/v1/content/${existingLink.hash}`;
+      const shareableLink = existingLink.hash;
       return res
         .status(201)
         .json({ message: "Link already exist", shareableLink });
@@ -286,7 +286,7 @@ app.get("/api/v1/content/share", Middleware, async (req, res): Promise<any> => {
 
     const hash = crypto.randomBytes(16).toString("hex");
     await linkModel.create({ hash, userId });
-    const shareableLink = `${req.protocol}://${req.get("host")}/api/v1/content/${hash}`;
+    const shareableLink = hash;
     return res
       .status(201)
       .json({ message: "Link created successfully", shareableLink });
@@ -296,12 +296,12 @@ app.get("/api/v1/content/share", Middleware, async (req, res): Promise<any> => {
   }
 });
 
-app.get("/api/v1/content/:hash", async (req, res): Promise<any> => {
+app.get("/api/v1/shareablecontent/:hash", async (req, res): Promise<any> => {
   try {
     const hash = req.params.hash;
     const link = await linkModel.findOne({ hash });
     const userId = link?.userId;
-    const contents = await contentModel.find({ userId });
+    const contents = await contentModel.find({ userId }).populate("tags");
     return res.status(200).json({ contents });
   } catch (e) {
     console.error("Error accessing user links", e);
