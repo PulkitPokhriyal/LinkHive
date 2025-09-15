@@ -16,6 +16,7 @@ import {
   linkModel,
   IType,
   ITag,
+  ILinkPopulated,
 } from "./db.ts";
 import { Middleware } from "./middleware.ts";
 import {
@@ -299,10 +300,16 @@ app.get("/api/v1/share-link", Middleware, async (req, res): Promise<any> => {
 app.get("/api/v1/shareablecontent/:hash", async (req, res): Promise<any> => {
   try {
     const hash = req.params.hash;
-    const link = await linkModel.findOne({ hash });
-    const userId = link?.userId;
+    const link = (await linkModel
+      .findOne({ hash })
+      .populate("userId", "username")) as ILinkPopulated | null;
+    if (!link) {
+      return res.status(404).json({ message: "Link not found" });
+    }
+    const userId = link.userId._id;
+    const username = link.userId.username;
     const contents = await contentModel.find({ userId }).populate("tags");
-    return res.status(200).json({ contents });
+    return res.status(200).json({ contents, username });
   } catch (e) {
     console.error("Error accessing user links", e);
     return res.status(500).json({ message: "Server error" });

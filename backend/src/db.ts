@@ -22,6 +22,13 @@ interface IContent extends Document {
   tags: (Types.ObjectId | ITag)[];
   userId: Types.ObjectId;
 }
+export interface ILinkPopulated extends Document {
+  hash: string;
+  userId: {
+    _id: Types.ObjectId;
+    username: string;
+  };
+}
 const userSchema = new Schema({
   email: { type: String, unique: true },
   hashpassword: String,

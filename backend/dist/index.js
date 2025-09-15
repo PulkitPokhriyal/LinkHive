@@ -255,10 +255,16 @@ app.get("/api/v1/share-link", Middleware, (req, res) => __awaiter(void 0, void 0
 app.get("/api/v1/shareablecontent/:hash", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const hash = req.params.hash;
-        const link = yield linkModel.findOne({ hash });
-        const userId = link === null || link === void 0 ? void 0 : link.userId;
+        const link = (yield linkModel
+            .findOne({ hash })
+            .populate("userId", "username"));
+        if (!link) {
+            return res.status(404).json({ message: "Link not found" });
+        }
+        const userId = link.userId._id;
+        const username = link.userId.username;
         const contents = yield contentModel.find({ userId }).populate("tags");
-        return res.status(200).json({ contents });
+        return res.status(200).json({ contents, username });
     }
     catch (e) {
         console.error("Error accessing user links", e);

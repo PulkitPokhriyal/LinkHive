@@ -34,13 +34,18 @@ export function getCreateType(typeName) {
 }
 export function extractImageIframe(link) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a;
+        var _a, _b;
         if (link.includes("youtube.com") || link.includes("youtu.be")) {
-            const videoId = ((_a = link.split("v=")[1]) === null || _a === void 0 ? void 0 : _a.split("&")[0]) || link.split("/").pop();
-            if (videoId) {
-                return `<iframe width="288" height="192" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            let videoId;
+            if (link.includes("youtube.com")) {
+                videoId = (_a = link.split("v=")[1]) === null || _a === void 0 ? void 0 : _a.split("&")[0];
             }
-            return "";
+            else if (link.includes("youtu.be")) {
+                videoId = (_b = link.split("youtu.be/")[1]) === null || _b === void 0 ? void 0 : _b.split("?")[0];
+            }
+            if (videoId) {
+                return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+            }
         }
         try {
             const { body: html } = yield got(link, {

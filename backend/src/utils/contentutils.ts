@@ -27,11 +27,17 @@ export async function getCreateType(typeName: string) {
 
 export async function extractImageIframe(link: string): Promise<string> {
   if (link.includes("youtube.com") || link.includes("youtu.be")) {
-    const videoId = link.split("v=")[1]?.split("&")[0] || link.split("/").pop();
-    if (videoId) {
-      return `<iframe width="288" height="192" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    let videoId;
+
+    if (link.includes("youtube.com")) {
+      videoId = link.split("v=")[1]?.split("&")[0];
+    } else if (link.includes("youtu.be")) {
+      videoId = link.split("youtu.be/")[1]?.split("?")[0];
     }
-    return "";
+
+    if (videoId) {
+      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    }
   }
 
   try {
