@@ -35,7 +35,7 @@ export const Signin = () => {
 
   return (
     <div className="flex ">
-      <div className="w-[60%] h-screen">
+      <div className="w-[60%] sm:items-center h-screen">
         <div className="flex gap-2 mt-6 ml-6">
           <img src="/Icon.png" className="h-6 w-6" />
           <h1 className="text-lg font-sans font-semibold text-text">
@@ -77,7 +77,7 @@ export const Signin = () => {
           </p>
         </div>
       </div>
-      <div className="w-[40%]">
+      <div className="w-[40%] md:block hidden">
         <img src="/picture.webp" className="w-full h-screen" />
       </div>
     </div>

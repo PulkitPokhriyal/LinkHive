@@ -121,7 +121,7 @@ export const Sidebar = ({ types, onTypeClick }: SidebarProps) => {
       <div
         ref={sidebarRef}
         className={`
-          h-screen shadow-lg z-50 overflow-y-auto 
+          h-screen shadow-lg z-50 
           transition-transform duration-300 flex-shrink-0
           fixed top-0 left-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}
           lg:static lg:translate-x-0 lg:z-auto lg:rounded-lg

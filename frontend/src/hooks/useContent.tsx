@@ -94,6 +94,7 @@ export function useContent() {
     contents,
     refresh,
     types,
+    contentById,
     fetchContentsByType,
     fetchContentById,
     generateShareLink,

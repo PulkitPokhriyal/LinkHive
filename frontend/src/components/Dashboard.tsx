@@ -39,15 +39,16 @@ function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-900">
-      <Sidebar
-        types={types}
-        onTypeClick={(typeId) => {
-          console.log("Clicked Type ID:", typeId);
-          fetchContentsByType(typeId);
-        }}
-      />
-
-      <div className="flex-1 flex flex-col lg:ml-0">
+      <div className="fixed left-0 top-0 h-full z-50">
+        <Sidebar
+          types={types}
+          onTypeClick={(typeId) => {
+            console.log("Clicked Type ID:", typeId);
+            fetchContentsByType(typeId);
+          }}
+        />
+      </div>
+      <div className="flex-1 flex flex-col lg:ml-80">
         <div className="sticky top-0 z-10 bg-gray-900 p-4">
           <div className="flex justify-end gap-3">
             <Button

@@ -42,24 +42,6 @@ function ShareableContent() {
     getSharableData();
   }, [sharelink]);
 
-  const getContentTypeIcon = () => {
-    return (
-      <svg
-        className="w-5 h-5 text-gray-500"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-        />
-      </svg>
-    );
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -144,9 +126,6 @@ function ShareableContent() {
 
                   <div className="p-5 flex-1 flex flex-col">
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="flex-shrink-0 mt-1">
-                        {getContentTypeIcon()}
-                      </div>
                       <h3 className="font-semibold text-text text-lg leading-tight line-clamp-2 flex-1">
                         {title}
                       </h3>
