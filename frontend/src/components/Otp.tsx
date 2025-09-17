@@ -10,6 +10,7 @@ interface OtpProps {
 export const Otp: React.FC<OtpProps> = ({ email }) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef<HTMLInputElement[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const handleChange = (value: string, index: number) => {
     if (!/^\d*$/.test(value)) return;
@@ -35,6 +36,7 @@ export const Otp: React.FC<OtpProps> = ({ email }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     const key: string = otp.join("");
     try {
       const response = await axios.post(BACKEND_URL + "/api/v1/verify-otp", {
@@ -52,6 +54,8 @@ export const Otp: React.FC<OtpProps> = ({ email }) => {
           alert("Something went wrong. Please try again.");
         }
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,8 +81,9 @@ export const Otp: React.FC<OtpProps> = ({ email }) => {
         <button
           type="submit"
           className="px-4 py-2 ml-28 bg-accent text-white rounded-md"
+          disabled={isLoading}
         >
-          Submit
+          {!isLoading ? "Submit" : "Authenticating..."}
         </button>
       </form>
     </div>

@@ -26,6 +26,7 @@ export function CreateContentModal({
   const [link, setLink] = useState("");
   const [contentType, setContentType] = useState("");
   const [tags, setTags] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -50,6 +51,7 @@ export function CreateContentModal({
       .map((tag) => tag.trim())
       .filter(Boolean);
     if (type === "Add Content") {
+      setIsLoading(true);
       try {
         await axios.post(
           BACKEND_URL + "/api/v1/content/",
@@ -71,9 +73,12 @@ export function CreateContentModal({
         if (axios.isAxiosError(e)) {
           alert(e);
         }
+      } finally {
+        setIsLoading(false);
       }
     } else {
       try {
+        setIsLoading(true);
         await axios.put(
           BACKEND_URL + `/api/v1/updatecontent/${contentById._id}`,
           {
@@ -94,6 +99,8 @@ export function CreateContentModal({
         if (axios.isAxiosError(e)) {
           alert(e);
         }
+      } finally {
+        setIsLoading(false);
       }
     }
   }
@@ -139,7 +146,13 @@ export function CreateContentModal({
                   variant="primary"
                   size="md"
                   text={
-                    type === "Add Content" ? "Add Content" : "Update Content"
+                    isLoading
+                      ? type === "Add Content"
+                        ? "Adding..."
+                        : "Updating..."
+                      : type === "Add Content"
+                        ? "Add Content"
+                        : "Update Content"
                   }
                   hover="secondary"
                   type="submit"

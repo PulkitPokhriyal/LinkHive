@@ -9,6 +9,7 @@ interface ButtonProps {
   onClick?: () => void;
   hover: "primary" | "secondary" | "danger";
   type?: "button" | "submit" | "reset";
+  loading?: boolean;
 }
 
 const variantStyles = {
@@ -37,6 +38,7 @@ export const Button = (props: ButtonProps) => {
       className={`${variantStyles[props.variant]} ${defaultStyles} ${sizeStyles[props.size]} ${hoverStyles[props.hover]}`}
       onClick={props.onClick}
       type={props.type}
+      disabled={props.loading}
     >
       <div className="flex items-center justify-center ">
         {props.startIcon ? <div className="pr-2">{props.startIcon}</div> : null}

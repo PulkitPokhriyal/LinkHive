@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { useNavigate } from "react-router-dom";
@@ -9,11 +9,13 @@ export const Signin = () => {
   const navigate = useNavigate();
   const emailRef = useRef<HTMLInputElement | null>(null);
   const passRef = useRef<HTMLInputElement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const email = emailRef.current?.value;
     const password = passRef.current?.value;
+    setIsLoading(true);
     try {
       const response = await axios.post(BACKEND_URL + "/api/v1/signin", {
         email,
@@ -30,6 +32,8 @@ export const Signin = () => {
           alert("Something went wrong, Please try again later.");
         }
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -62,8 +66,9 @@ export const Signin = () => {
                 variant="primary"
                 size="md"
                 type="submit"
-                text="Signin"
+                text={!isLoading ? "Signin" : "Signing in ..."}
                 hover="secondary"
+                loading={isLoading}
               />
             </form>
           </div>
