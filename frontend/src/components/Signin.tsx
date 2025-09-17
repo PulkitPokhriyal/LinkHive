@@ -34,40 +34,45 @@ export const Signin = () => {
   };
 
   return (
-    <div className="flex ">
-      <div className="w-[60%] sm:items-center h-screen">
+    <div className="flex min-h-screen">
+      <div className="md:w-[60%] w-full flex flex-col">
         <div className="flex gap-2 mt-6 ml-6">
           <img src="/Icon.png" className="h-6 w-6" />
           <h1 className="text-lg font-sans font-semibold text-text">
             LinkHive
           </h1>
         </div>
-        <div className="flex flex-col items-center mt-36 ">
-          <h1 className="text-accent text-3xl pb-8 font-bold">
-            Sign In to LinkHive
-          </h1>
-          <form className="flex flex-col items-center" onSubmit={handleSubmit}>
-            <Input reference={emailRef} placeholder="Email" required />
-            <Input
-              reference={passRef}
-              placeholder="Password"
-              required
-              type="password"
-            />
-            <Button
-              variant="primary"
-              size="md"
-              type="submit"
-              text="Signin"
-              hover="secondary"
-            />
-          </form>
+        <div className="flex flex-col flex-1 justify-center items-center px-6">
+          <div className="w-full max-w-md">
+            <h1 className="text-accent sm:text-3xl text-2xl text-center pb-8 font-bold">
+              Sign In to LinkHive
+            </h1>
+            <form
+              className="flex flex-col items-center space-y-4"
+              onSubmit={handleSubmit}
+            >
+              <Input reference={emailRef} placeholder="Email" required />
+              <Input
+                reference={passRef}
+                placeholder="Password"
+                required
+                type="password"
+              />
+              <Button
+                variant="primary"
+                size="md"
+                type="submit"
+                text="Signin"
+                hover="secondary"
+              />
+            </form>
+          </div>
         </div>
-        <div>
-          <p className="text-text mt-64 ml-6">
+        <div className="pb-6 pl-6">
+          <p className="text-text">
             No account yet?
             <span
-              className="text-accent underline font-semibold hover:cursor-pointer"
+              className="text-accent underline font-semibold hover:cursor-pointer ml-1"
               onClick={() => {
                 navigate("/signup");
               }}
