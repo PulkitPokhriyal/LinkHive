@@ -156,6 +156,7 @@ export function CreateContentModal({
                   }
                   hover="secondary"
                   type="submit"
+                  loading={isLoading}
                 />
               </form>
             </div>
